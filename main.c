@@ -38,7 +38,6 @@ static void processing(int *input, int *output)
 
 int16_t a_law(int16_t lin){
     int16_t log = 0;
-    log |= (lin & 0x8000); //copy sign bit to log first
 
     /*
      * Calculate the chord of log value
@@ -48,11 +47,12 @@ int16_t a_law(int16_t lin){
      * */
 
     int16_t chord = get_chord(lin & 0x7fff); //clear sign bit of lin
-    log |= (chord << 12);
-    // Chord complete.
     
-    const int shift_LUT[8] ={4, 4, 3, 2, 1, 0, -1, -2};
-    log |= (lin << shift_LUT[chord]);
+    const int shift_LUT[8] = {4, 4, 3, 2, 1, 0, -1, -2};
+    log |= (lin << shift_LUT[chord]); //set remainers
+    log &= 0x8FFF; //0b1000111111111111 clear chord field first
+    log |= (chord << 12); // set proper chord
+    log |= (lin & 0x8000); //copy sign bit to log
     log >>= 8; //shift result to lower byte.
     log &= 0x00FF; // purge higher byte.
 
